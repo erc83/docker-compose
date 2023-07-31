@@ -1,4 +1,7 @@
-## app que levanta 3 contenedores docker
+## consideraciones generales tener instalado docker 
+tener instalado docker y poder ejecutar docker compose
+
+## App que levanta 3 contenedores docker
 
 descargar el proyecto
 
