@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  db:
+    container_name: ${MONGO_DB_NAME}    # nombre del contenedor y nombre del servidor dns
+    image: mongo:6.0
+    volumes:
+      - poke-vol:/data/db
+    
+    # el container mongo-expres aun tiene acceso al container pokemonDB
+    ##ports:
+    ##  - 27017:27017      # aqui parq que se exponga el puerto al exterior
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    command: ['--auth']      # ejecuta este comando 
+
+  mongo-express:
+    depends_on:
+      - db
+    image: mongo-express:1.0.0-alpha.4
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_SERVER: ${MONGO_DB_NAME}      ## cuando se crea la red, crea un nombre y ese nombre va a ser el nombre dns que utilizaremos
+    ports:
+      - 8080:8081        # expuesto puerto local 8080,  y el container expone el 8081
+    restart: always
+
+  poke-app:
+    depends_on:
+      - db
+      - mongo-express    # aunque son independientes se va a esperar que se ejecute
+    image: klerith/pokemon-nest-app:1.0.0
+    ports:
+      - 3000:3000   
+    environment:
+      #MONGODB: mongodb://strider:123456789@localhost :27017
+      MONGODB: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_DB_NAME}:27017    # usando el nombre del servicio
+      DB_NAME: ${MONGO_DB_NAME}   # se conecta al mismo servidor donde esta la base de datos
+    restart: always
+
+volumes:
+  poke-vol:               # el nombre del volumen dentro de la carpeta volumen
+    external: false   # porque no tenemos creado el volumen
+
+
+
